@@ -5,6 +5,7 @@ runs/
 proposals/
 analysis.json
 analysis-*.json
+codebase-analysis-*.json
 artifacts/pot*.ptau
 artifacts/*_0000.zkey
 artifacts/*.r1cs

@@ -4,25 +4,37 @@ import { readFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import * as snarkjs from 'snarkjs';
 import { analyzeSources, generatedCode, ruleTemplate, ruleVersion, sources } from '../server/data.mjs';
+import { analyzeCodebase } from '../server/codebase.mjs';
 import { provePair } from '../server/proof.mjs';
 
-test('analysis joins two 20-row tables and identifies the short credit', () => {
+test('sample rows contain a 50 USDT deposit credited as 50 ETH', () => {
   const result = analyzeSources();
   assert.equal(result.tables.length, 2);
   assert.deepEqual(result.tables.map(table => table.rowCount), [20, 20]);
   assert.equal(result.sharedIds, 20);
   assert.equal(result.flaggedDepositId, 'DEP-1050');
-  assert.equal(result.observed.deposit, '56.00 USDC');
-  assert.equal(result.observed.transaction, '51.00 USDC');
+  assert.equal(result.observed.deposit, '50.00 USDT');
+  assert.equal(result.observed.transaction, '50.00 ETH');
 });
 
-test('generated code checks all deposits and finds the one short credit', async () => {
+test('sample codebase scan finds the two tables and approved question candidates', async () => {
+  const result = await analyzeCodebase();
+  assert.deepEqual(result.tables.map(table => table.name), ['coinDeposit', 'transactions']);
+  assert.equal(result.files.length, 3);
+  assert.equal(result.relationship.from, 'coinDeposit.depositId');
+  assert.equal(result.relationship.to, 'transactions.depositId');
+  assert.deepEqual(result.questions.map(question => question.id), ['one-credit', 'same-owner-asset', 'same-amount']);
+});
+
+test('generated code checks all deposits and finds the one asset mismatch', async () => {
   const module = await import(`data:text/javascript,${encodeURIComponent(generatedCode)}`);
   const result = module.reconcile(sources, ruleTemplate);
   assert.equal(result.checked, 20);
   assert.equal(result.passed, false);
-  assert.deepEqual(result.findings.map(f => f.kind), ['amount']);
+  assert.deepEqual(result.findings.map(f => f.kind), ['asset']);
   assert.equal(result.findings[0].reference, 'DEP-1050');
+  const withPending = { ...sources, coinDeposit: [...sources.coinDeposit, { ...sources.coinDeposit[0], depositId: 'DEP-PENDING', status: 'pending' }] };
+  assert.equal(module.reconcile(withPending, ruleTemplate).checked, 20);
 });
 
 test('pair proof verifies mismatch and rejects a changed public outcome', async () => {

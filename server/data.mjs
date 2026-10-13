@@ -3,16 +3,16 @@ import { readFileSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { generateCheckCode } from './generate.mjs';
 
-const amounts = [5000, 12500, 8750, 4200, 19900, 7500, 6150, 32000, 9400, 5600, 11750, 8300, 26600, 7100, 15400, 4800, 10300, 22500, 6700, 13800];
+const amounts = [5000, 12500, 8750, 4200, 19900, 7500, 6150, 32000, 9400, 5000, 11750, 8300, 26600, 7100, 15400, 4800, 10300, 22500, 6700, 13800];
 const reference = index => `DEP-${String(1041 + index).padStart(4, '0')}`;
 export const sources = {
-  coinDeposit: amounts.map((amountCents, index) => ({ depositId: reference(index), referenceCode: 1041 + index, accountId: `ACC-${String(201 + index).padStart(3, '0')}`, accountCode: 201 + index, asset: 'USDC', assetCode: 1, amountCents, recordedAt: `2026-10-13T01:${String(index).padStart(2, '0')}:03Z` })),
-  transactions: amounts.map((amountCents, index) => ({ transactionId: `TX-${String(501 + index).padStart(4, '0')}`, depositId: reference(index), referenceCode: 1041 + index, accountId: `ACC-${String(201 + index).padStart(3, '0')}`, accountCode: 201 + index, direction: 'credit', directionCode: 1, asset: 'USDC', assetCode: 1, amountCents: index === 9 ? amountCents - 500 : amountCents, recordedAt: `2026-10-13T01:${String(index).padStart(2, '0')}:08Z` }))
+  coinDeposit: amounts.map((amountCents, index) => ({ depositId: reference(index), referenceCode: 1041 + index, accountId: `ACC-${String(201 + index).padStart(3, '0')}`, accountCode: 201 + index, asset: 'USDT', assetCode: 1, amountCents, status: 'confirmed', recordedAt: `2026-10-13T01:${String(index).padStart(2, '0')}:03Z` })),
+  transactions: amounts.map((amountCents, index) => ({ transactionId: `TX-${String(501 + index).padStart(4, '0')}`, depositId: reference(index), referenceCode: 1041 + index, accountId: `ACC-${String(201 + index).padStart(3, '0')}`, accountCode: 201 + index, direction: 'credit', directionCode: 1, asset: index === 9 ? 'ETH' : 'USDT', assetCode: index === 9 ? 2 : 1, amountCents, recordedAt: `2026-10-13T01:${String(index).padStart(2, '0')}:08Z` }))
 };
 export const ruleTemplate = {
   id: 'coin-deposit-transaction-v1',
   title: 'Every coin deposit receives one matching balance credit',
-  description: 'For each coinDeposit row, find exactly one credit in transactions with the same deposit ID, account, asset and amount.',
+  description: 'For each confirmed coinDeposit row, find exactly one credit in transactions with the same deposit ID, account, asset and amount.',
   sources: ['coinDeposit', 'transactions'],
   checks: ['same deposit ID', 'exactly one credit transaction', 'same account and asset', 'same amount'],
   scope: 'Twenty synthetic deposits and transactions; the proof covers the flagged pair',

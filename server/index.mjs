@@ -3,15 +3,17 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { extname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { sources, ruleTemplate, ruleVersion, windowId, digest, generatedCode, analyzeSources } from './data.mjs';
+import { sources, ruleTemplate, ruleVersion, windowId, digest, generatedCode } from './data.mjs';
+import { analyzeCodebase, matchQuestions } from './codebase.mjs';
 import { provePair } from './proof.mjs';
-import { createPullRequest, githubConfigured } from './github.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const publicDir = join(root, 'public');
 const proposalDir = join(root, 'proposals');
 const runDir = join(root, 'runs');
-const analysisFile = join(root, `analysis-${ruleVersion}.json`);
+const analysisFile = join(root, `codebase-analysis-${ruleVersion}.json`);
+const proposalJson = join(proposalDir, `mock-${ruleVersion}.json`);
+const proposalCode = join(proposalDir, `mock-${ruleVersion}.mjs`);
 await Promise.all([mkdir(proposalDir, { recursive: true }), mkdir(runDir, { recursive: true })]);
 const runs = new Map();
 const type = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml' };
@@ -29,7 +31,7 @@ async function body(request) {
   return data ? JSON.parse(data) : {};
 }
 async function proposal() {
-  try { return JSON.parse(await readFile(join(proposalDir, `${ruleVersion}.json`), 'utf8')); }
+  try { return JSON.parse(await readFile(proposalJson, 'utf8')); }
   catch (error) { if (error.code === 'ENOENT') return null; throw error; }
 }
 async function analysis() {
@@ -37,8 +39,8 @@ async function analysis() {
   catch (error) { if (error.code === 'ENOENT') return null; throw error; }
 }
 async function saveProposal(value) {
-  await writeFile(join(proposalDir, `${value.version}.json`), JSON.stringify(value, null, 2));
-  await writeFile(join(proposalDir, `${value.version}.mjs`), value.code);
+  await writeFile(proposalJson, JSON.stringify(value, null, 2));
+  await writeFile(proposalCode, value.code);
 }
 async function saveRun(value) { runs.set(value.id, value); await writeFile(join(runDir, `${value.id}.json`), JSON.stringify(value, null, 2)); }
 async function update(run, stage, message) {
@@ -50,7 +52,7 @@ async function update(run, stage, message) {
 async function executeRun(run) {
   try {
     await update(run, 'snapshot', 'Loaded 20 coin deposits and 20 credit transactions.');
-    const { reconcile } = await import(pathToFileURL(join(proposalDir, `${run.version}.mjs`)).href);
+    const { reconcile } = await import(pathToFileURL(proposalCode).href);
     const result = reconcile(sources, ruleTemplate);
     run.result = result;
     await update(run, 'reconcile', `${result.checked} deposits checked; ${result.findings.length} exception found.`);
@@ -74,25 +76,27 @@ const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
     if (request.method === 'GET' && url.pathname === '/api/bootstrap') {
-      return json(response, 200, { sources, rule: ruleTemplate, ruleVersion, windowId, proposal: await proposal(), analysis: await analysis(), githubConfigured: githubConfigured(), githubRepository: process.env.GITHUB_REPOSITORY || null, githubAccessUrl: process.env.GITHUB_APP_INSTALL_URL || null });
+      return json(response, 200, { rule: ruleTemplate, ruleVersion, windowId, sampleRepository: 'sample/wallet-ledger', questions: matchQuestions });
     }
-    if (request.method === 'POST' && url.pathname === '/api/analyze') {
-      const result = analyzeSources();
+    if (request.method === 'POST' && url.pathname === '/api/analyze-codebase') {
+      const result = await analyzeCodebase();
       await writeFile(analysisFile, JSON.stringify(result, null, 2));
       return json(response, 200, result);
+    }
+    if (request.method === 'GET' && url.pathname === '/api/review-sources') {
+      if (!await proposal()) return json(response, 400, { error: 'Approve the setup before opening Run Review.' });
+      return json(response, 200, { sources, synthetic: true, ruleVersion });
     }
     if (request.method === 'POST' && url.pathname === '/api/proposal') {
       const input = await body(request);
       if (input.version !== ruleVersion) return json(response, 400, { error: 'Rule version changed; reload first.' });
-      if (!await analysis()) return json(response, 400, { error: 'Analyze the sources before preparing code.' });
+      if (!await analysis()) return json(response, 400, { error: 'Analyze the sample codebase first.' });
+      if (input.approved !== true || JSON.stringify(input.questionIds) !== JSON.stringify(matchQuestions.map(question => question.id))) {
+        return json(response, 400, { error: 'Approve the proposed questions before generating code.' });
+      }
       let value = await proposal();
       if (!value) {
-        value = { version: ruleVersion, rule: ruleTemplate, code: generatedCode, createdAt: new Date().toISOString(), github: { status: 'not_configured' } };
-        await saveProposal(value);
-      }
-      if (githubConfigured() && value.github.status !== 'open') {
-        try { value.github = await createPullRequest(value); }
-        catch (error) { value.github = { status: 'failed', reason: error.message }; }
+        value = { version: ruleVersion, rule: ruleTemplate, code: generatedCode, approvedQuestions: input.questionIds, createdAt: new Date().toISOString(), github: { status: 'mock', number: 1, title: 'Add deposit reconciliation check', repository: 'sample/wallet-ledger', files: ['rules/check.mjs', 'rules/coin-deposit-transaction-v1.json', 'circuit/reconcile.circom'], url: null } };
         await saveProposal(value);
       }
       return json(response, 200, value);

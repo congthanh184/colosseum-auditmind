@@ -1,14 +1,38 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>AuditMind — Interactive demo</title><link rel="stylesheet" href="/styles.css"></head>
-<body class="demo">
-  <header class="site-header"><a class="brand" href="/"><img src="/brand/icon-mark-transparent.png" alt=""><span>AuditMind</span></a><nav><a href="/">About AuditMind</a><span class="demo-tag">Synthetic demo</span></nav></header>
-  <main class="demo-main"><div class="demo-heading"><div><h1>Follow the deposit.</h1></div><p>Start as a guest. Compare two fictional tables, approve a rule, then see what the preview worker finds.</p></div>
-  <ol class="progress" id="progress"><li class="active">Sign in</li><li>GitHub</li><li>Tables</li><li>Analysis</li><li>Code</li><li>Preview</li><li>Report</li></ol>
-  <p class="mobile-progress" id="mobile-progress"></p>
-  <div class="case-strip" id="case-strip" hidden><span>Sample case</span><strong>DEP-1050</strong><span>56.00 USDC deposited</span><b aria-hidden="true">→</b><span>51.00 USDC credited</span><em>5.00 short</em></div>
-  <div id="screen" class="flow-container" aria-live="polite"></div>
-  </main><footer class="demo-footer">AuditMind demo · The sample records are fictional and do not represent a real business.</footer>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AuditMind — Demo workspace</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="demo dashboard-demo">
+  <header class="dash-global">
+    <a class="brand" href="/"><img src="/brand/icon-mark-transparent.png" alt=""><span>AuditMind</span></a>
+    <div class="dash-global-right"><span>Guided product demo</span><span class="guest-pill">Guest</span></div>
+  </header>
+  <main id="login-root" class="login-root"></main>
+  <div id="dashboard" class="dashboard-shell" hidden>
+    <aside class="dashboard-sidebar">
+      <div class="sidebar-project"><span>Sample project</span><strong>Wallet ledger</strong><small>Fictional repository and data</small></div>
+      <nav aria-label="Demo sections">
+        <p>Setup</p>
+        <button type="button" class="side-step" data-step="1"><span>01</span> GitHub access</button>
+        <button type="button" class="side-step" data-step="2"><span>02</span> Analyze codebase</button>
+        <button type="button" class="side-step" data-step="3"><span>03</span> Core tables</button>
+        <button type="button" class="side-step" data-step="4"><span>04</span> Questions</button>
+        <button type="button" class="side-step" data-step="5"><span>05</span> Approval</button>
+        <button type="button" class="side-step" data-step="6"><span>06</span> Code &amp; mock PR</button>
+        <button type="button" class="side-step" data-step="7"><span>07</span> Done</button>
+        <p class="sidebar-separator">After setup</p>
+        <button type="button" id="review-nav" class="review-nav">Run Review <span>↗</span></button>
+      </nav>
+      <div class="sidebar-bottom">Guest workspace<br>Local guided demo</div>
+    </aside>
+    <div class="dashboard-content">
+      <div class="dashboard-toolbar"><span id="breadcrumb">Setup</span><span class="toolbar-tag">Sample environment</span></div>
+      <main id="screen"></main>
+    </div>
+  </div>
   <script type="module" src="/demo.js"></script>
 </body>
 </html>

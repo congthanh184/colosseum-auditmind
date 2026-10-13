@@ -4,7 +4,8 @@ export function generateCheckCode(rule) {
 // The preview worker executes this exact proposed file.
 export function reconcile({ coinDeposit, transactions }, rule) {
   const findings = [];
-  for (const deposit of coinDeposit) {
+  const confirmed = coinDeposit.filter(row => row.status === 'confirmed');
+  for (const deposit of confirmed) {
     const related = transactions.filter(row => row.depositId === deposit.depositId && row.direction === 'credit');
     if (related.length !== 1) {
       findings.push({ reference: deposit.depositId, kind: 'cardinality', source: 'transactions', expected: 'one credit', actual: String(related.length) });
@@ -15,7 +16,7 @@ export function reconcile({ coinDeposit, transactions }, rule) {
     if (credit.asset !== deposit.asset) findings.push({ reference: deposit.depositId, kind: 'asset', source: 'transactions', expected: deposit.asset, actual: credit.asset });
     if (credit.amountCents !== deposit.amountCents) findings.push({ reference: deposit.depositId, kind: 'amount', source: 'transactions', expected: (deposit.amountCents / 100).toFixed(2) + ' ' + deposit.asset, actual: (credit.amountCents / 100).toFixed(2) + ' ' + credit.asset });
   }
-  return { ruleId: rule.id, checked: coinDeposit.length, passed: findings.length === 0, findings };
+  return { ruleId: rule.id, checked: confirmed.length, passed: findings.length === 0, findings };
 }
 `;
 }
