@@ -2,6 +2,8 @@
 
 A light-themed, local **guided demo** with two separate dashboard areas.
 
+The dashboard is built with React components in `src/demo.jsx`. `npm start` builds the browser bundle before starting the Node server. The landing page remains a static HTML page.
+
 ## Setup
 
 1. Sign in as Guest.
@@ -32,6 +34,8 @@ npm start
 Open `http://127.0.0.1:4173`. Generated proof artifacts are included, so `npm run proof:setup` is needed only after changing the circuit. That setup uses a local prototype trusted ceremony, not a production ceremony.
 
 `npm test` checks codebase fixture analysis, the generated rule, proof verification, and rejection of a modified public outcome.
+
+For frontend edits, run `npm run build:watch` alongside `npm run dev`.
 
 ## Scope of evidence
 

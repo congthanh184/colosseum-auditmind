@@ -1,4 +1,5 @@
 node_modules/
+public/demo.bundle.js
 .env
 .secrets/
 runs/

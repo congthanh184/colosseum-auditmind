@@ -6,33 +6,7 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="demo dashboard-demo">
-  <header class="dash-global">
-    <a class="brand" href="/"><img src="/brand/icon-mark-transparent.png" alt=""><span>AuditMind</span></a>
-    <div class="dash-global-right"><span>Guided product demo</span><span class="guest-pill">Guest</span></div>
-  </header>
-  <main id="login-root" class="login-root"></main>
-  <div id="dashboard" class="dashboard-shell" hidden>
-    <aside class="dashboard-sidebar">
-      <div class="sidebar-project"><span>Sample project</span><strong>Wallet ledger</strong><small>Fictional repository and data</small></div>
-      <nav aria-label="Demo sections">
-        <p>Setup</p>
-        <button type="button" class="side-step" data-step="1"><span>01</span> GitHub access</button>
-        <button type="button" class="side-step" data-step="2"><span>02</span> Analyze codebase</button>
-        <button type="button" class="side-step" data-step="3"><span>03</span> Core tables</button>
-        <button type="button" class="side-step" data-step="4"><span>04</span> Questions</button>
-        <button type="button" class="side-step" data-step="5"><span>05</span> Approval</button>
-        <button type="button" class="side-step" data-step="6"><span>06</span> Code &amp; mock PR</button>
-        <button type="button" class="side-step" data-step="7"><span>07</span> Done</button>
-        <p class="sidebar-separator">After setup</p>
-        <button type="button" id="review-nav" class="review-nav">Run Review <span>↗</span></button>
-      </nav>
-      <div class="sidebar-bottom">Guest workspace<br>Local guided demo</div>
-    </aside>
-    <div class="dashboard-content">
-      <div class="dashboard-toolbar"><span id="breadcrumb">Setup</span><span class="toolbar-tag">Sample environment</span></div>
-      <main id="screen"></main>
-    </div>
-  </div>
-  <script type="module" src="/demo.js"></script>
+  <div id="root"></div>
+  <script type="module" src="/demo.bundle.js"></script>
 </body>
 </html>

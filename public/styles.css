@@ -521,3 +521,55 @@ button:disabled { opacity: .58; cursor: not-allowed; }
   .hash-footer { grid-template-columns: auto 1fr; }
   .hash-footer code { grid-column: 2; }
 }
+
+/* React workspace feedback: motion follows real state changes. */
+.work-enter { animation: work-enter .32s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes work-enter { from { opacity: .5; transform: translateY(8px); filter: blur(2px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+.button-spinner { display: inline-block; width: 14px; height: 14px; flex: none; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+.button:disabled .button-spinner { opacity: 1; }
+.action-error { margin: 15px 0 0; }
+.loading-sheet { min-height: 180px; display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--body); font-weight: 600; }
+.file-list > div { grid-template-columns: 50px minmax(0, 1fr) 190px 22px; }
+.file-list .file-done { color: var(--green); font-size: 17px; font-weight: 700; }
+.file-list.is-scanning > div { color: var(--muted); }
+.scan-activity { display: flex; align-items: center; gap: 12px; margin-top: 21px; font-size: 13px; color: var(--blue); }
+.activity-track { width: 95px; height: 3px; background: #cadcf3; overflow: hidden; }
+.activity-track span { display: block; width: 38px; height: 100%; background: var(--blue); animation: scan-progress 1.2s ease-in-out infinite alternate; }
+@keyframes scan-progress { to { transform: translateX(58px); } }
+.run-activity { background: white; border: 1px solid var(--line); margin-top: 15px; padding: 17px 20px; }
+.run-activity-title { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 700; }
+.live-pulse, .activity-finished { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
+.live-pulse { animation: activity-pulse 1.1s ease-out infinite; }
+.activity-finished { background: var(--green); }
+@keyframes activity-pulse { 50% { box-shadow: 0 0 0 5px #d4e3f8; } }
+.run-activity ol { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; list-style: none; margin: 15px 0 0; padding: 0; }
+.run-activity li { display: block; min-width: 0; padding: 11px 8px 0 0; border-top: 2px solid #bed1e8; color: var(--body); font-size: 12px; line-height: 1.5; }
+.run-activity li span { display: block; color: var(--blue); font-family: 'IBM Plex Mono', monospace; margin-bottom: 4px; }
+.run-activity li.latest { color: var(--ink); font-weight: 600; }
+.run-activity li.latest { border-top-color: var(--blue); }
+.pair-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 13px; margin-bottom: 16px; padding: 15px 18px; background: #edf6f1; border: 1px solid #b8d3c3; }
+.pair-summary.has-mismatch { background: #fff3f0; border-color: #e6bfb7; }
+.pair-summary > div { display: grid; gap: 3px; }
+.pair-summary small { color: var(--body); font-size: 11px; }
+.pair-summary strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+.pair-summary.has-mismatch > div:last-of-type strong { color: var(--red); }
+.pair-connector { color: var(--blue); font-size: 18px; margin-inline: 5px; }
+.pair-verdict { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--green); }
+.pair-summary.has-mismatch .pair-verdict { color: var(--red); }
+.source-sheet tbody tr { cursor: pointer; }
+.source-sheet tbody tr:hover:not(.selected-pair) td { background: #eaf2fc; }
+.source-sheet tbody tr:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.copy-hash { margin-top: 12px; background: transparent; border: 0; color: var(--blue); padding: 3px 0; font-size: 12px; font-weight: 700; }
+.copy-hash:hover { text-decoration: underline; text-underline-offset: 3px; }
+.dashboard-demo * { scrollbar-color: #b7c9e1 transparent; }
+@media (max-width: 740px) {
+  .file-list > div { grid-template-columns: 34px minmax(0, 1fr) 22px; }
+  .file-list > div > span:nth-child(3) { grid-column: 2; }
+  .file-list .file-done { grid-column: 3; grid-row: 1 / 3; }
+  .pair-verdict { width: 100%; margin-left: 0; }
+  .run-activity ol { grid-template-columns: 1fr; }
+  .run-activity li { padding: 7px 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .work-enter, .button-spinner, .activity-track span, .live-pulse { animation: none; }
+}

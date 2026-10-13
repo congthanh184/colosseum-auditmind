@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server/index.mjs",
+    "build": "esbuild src/demo.jsx --bundle --format=esm --target=es2022 --minify --outfile=public/demo.bundle.js",
+    "build:watch": "npm run build -- --watch",
+    "start": "npm run build && node server/index.mjs",
     "dev": "node --watch server/index.mjs",
     "proof:setup": "node scripts/setup-proof.mjs",
     "test": "node --test --test-force-exit"
@@ -12,7 +14,12 @@
   "dependencies": {
     "circomlib": "2.0.5",
     "circomlibjs": "0.1.7",
+    "esbuild": "^0.28.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "snarkjs": "0.7.6"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
