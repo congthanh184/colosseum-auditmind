@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import ProofStory from './ProofStory.jsx';
 
 const steps = ['GitHub access', 'Analyze codebase', 'Core tables', 'Questions', 'Approval', 'Code & mock PR', 'Done'];
+const setupLoadingLabels = [null, null, 'Opening the sample codebase…', 'Preparing core tables…', 'Preparing reconciliation questions…', 'Opening approval…', 'Preparing the mock pull request…', 'Finishing setup…'];
+const demoPause = () => new Promise(resolve => setTimeout(resolve, 950));
 const sampleFiles = [
   ['SQL', 'db/schema.sql', 'Database tables'],
   ['TS', 'src/deposit-service.ts', 'Deposit write path'],
@@ -22,6 +24,9 @@ function GithubMark() {
   return <svg viewBox="0 0 24 24" aria-hidden="true" width="28" height="28" fill="currentColor"><path d="M12 .8a11.2 11.2 0 0 0-3.54 21.83c.56.1.77-.24.77-.54v-2.1c-3.13.68-3.79-1.33-3.79-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.68.08-.68 1.13.08 1.73 1.16 1.73 1.16 1 .1.37 2.08 2.64 1.46.1-.72.4-1.2.73-1.48-2.5-.28-5.13-1.25-5.13-5.57 0-1.23.44-2.23 1.15-3.02-.12-.28-.5-1.43.11-2.98 0 0 .94-.3 3.08 1.15a10.7 10.7 0 0 1 5.6 0c2.14-1.45 3.08-1.15 3.08-1.15.61 1.55.23 2.7.11 2.98.72.79 1.15 1.79 1.15 3.02 0 4.33-2.64 5.28-5.15 5.56.41.35.78 1.02.78 2.06v3.06c0 .3.2.65.78.54A11.2 11.2 0 0 0 12 .8Z"/></svg>;
 }
 function Busy({ children }) { return <><span className="button-spinner" aria-hidden="true" />{children}</>; }
+function SetupLoading({ next }) {
+  return <section className="setup-loading" role="status" aria-live="polite"><span className="setup-loading-count">Setup {String(next).padStart(2, '0')} / 07</span><span className="setup-loading-spinner" aria-hidden="true" /><h1>{setupLoadingLabels[next]}</h1><p>Loading the next stage of the guided demo</p></section>;
+}
 function Heading({ name, description, badge }) {
   return <div className="work-heading"><div><h1>{name}</h1><p>{description}</p></div>{badge && <span className="heading-badge">{badge}</span>}</div>;
 }
@@ -39,8 +44,8 @@ function Access({ bootstrap, next }) {
 function Analysis({ bootstrap, analysis, onScan, next }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  async function scan() { setBusy(true); setError(''); try { await onScan(); } catch (err) { setError(err.message); } finally { setBusy(false); } }
-  return <><Heading name="Analyze the codebase" description="Inspect the sample schema and service files to locate the deposit and credit paths." badge="Sample codebase" /><section className="work-card"><div className="section-line"><strong>{bootstrap.sampleRepository}</strong><span>3 fixture files</span></div><div className={`file-list ${busy ? 'is-scanning' : ''}`}>{sampleFiles.map(([type, path, description]) => <div key={path}><span className="file-type">{type}</span><code>{path}</code><span>{description}</span>{analysis && <span className="file-done" aria-label="Read">✓</span>}</div>)}</div>{busy && <div className="scan-activity" role="status"><span className="activity-track"><span /></span><strong>Reading schema and service files…</strong></div>}{analysis ? <div className="scan-result"><strong>Scan complete</strong><p>Found {analysis.tables.length} core tables. The services write deposits to <code>coinDeposit</code> and balance credits to <code>transactions</code>.</p></div> : !busy && <p className="work-hint">Run the scan to see what the sample codebase reveals.</p>}<ErrorMessage error={error} /></section><Actions note={analysis ? 'The scan read local fixture files.' : 'No live codebase is accessed.'}>{analysis ? <button className="button primary" onClick={next}>View core tables</button> : <button className="button primary" onClick={scan} disabled={busy}>{busy ? <Busy>Analyzing codebase</Busy> : 'Analyze sample codebase'}</button>}</Actions></>;
+  async function scan() { setBusy(true); setError(''); try { await Promise.all([onScan(), demoPause()]); } catch (err) { setError(err.message); } finally { setBusy(false); } }
+  return <><Heading name="Analyze the codebase" description="Inspect the sample schema and service files to locate the deposit and credit paths." badge="Sample codebase" /><section className="work-card"><div className="section-line"><strong>{bootstrap.sampleRepository}</strong><span>3 fixture files</span></div><div className={`file-list ${busy ? 'is-scanning' : ''}`}>{sampleFiles.map(([type, path, description]) => <div key={path}><span className="file-type">{type}</span><code>{path}</code><span>{description}</span>{analysis && !busy && <span className="file-done" aria-label="Read">✓</span>}</div>)}</div>{busy && <div className="scan-activity" role="status"><span className="activity-track"><span /></span><strong>Reading schema and service files…</strong></div>}{analysis && !busy ? <div className="scan-result"><strong>Scan complete</strong><p>Found {analysis.tables.length} core tables. The services write deposits to <code>coinDeposit</code> and balance credits to <code>transactions</code>.</p></div> : !busy && <p className="work-hint">Run the scan to see what the sample codebase reveals.</p>}<ErrorMessage error={error} /></section><Actions note={analysis ? 'The scan read local fixture files.' : 'No live codebase is accessed.'}>{analysis && !busy ? <button className="button primary" onClick={next}>View core tables</button> : <button className="button primary" onClick={scan} disabled={busy}>{busy ? <Busy>Analyzing codebase</Busy> : 'Analyze sample codebase'}</button>}</Actions></>;
 }
 function Tables({ analysis, next }) {
   return <><Heading name="Core tables to match" description="The codebase points to two records that should agree after a deposit is confirmed." badge="2 tables" /><div className="schema-grid">{analysis.tables.map(table => <section className="schema-card" key={table.name}><div className="schema-card-head"><strong>{table.name}</strong><span>{table.fields.length} fields</span></div><ul>{table.fields.map(field => <li key={field}><code>{field}</code></li>)}</ul></section>)}</div><div className="join-note"><span>Join candidate</span><strong><code>{analysis.relationship.from}</code> = <code>{analysis.relationship.to}</code></strong><p>Only <code>{analysis.relationship.filter}</code> rows count as balance increases.</p></div><Actions note="Schema understanding comes before row comparison."><button className="button primary" onClick={next}>See reconciliation questions</button></Actions></>;
@@ -128,6 +133,8 @@ function App() {
   const [step, setStep] = useState(1);
   const [maxStep, setMaxStep] = useState(1);
   const [view, setView] = useState('setup');
+  const [transition, setTransition] = useState(null);
+  const transitionLock = useRef(false);
   const [analysis, setAnalysis] = useState(null);
   const [proposal, setProposal] = useState(null);
   const [sources, setSources] = useState(null);
@@ -150,7 +157,18 @@ function App() {
     poll();
     return () => { cancelled = true; clearTimeout(timer); };
   }, [runId]);
-  function advance(next) { setView('setup'); setStep(next); setMaxStep(current => Math.max(current, next)); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  async function advance(next) {
+    if (transitionLock.current) return;
+    transitionLock.current = true;
+    setTransition(next);
+    await demoPause();
+    setView('setup');
+    setStep(next);
+    setMaxStep(current => Math.max(current, next));
+    setTransition(null);
+    transitionLock.current = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
   async function openReview() {
     if (maxStep < 7) return;
     setView('review');
@@ -164,16 +182,16 @@ function App() {
   async function startRun() { const response = await post('/api/run-preview', { version: proposal.version }); setRun({ stage: 'queued', events: [] }); setRunId(response.id); }
   let content;
   if (view === 'review') content = reviewError ? <><Heading name="Run Review" description="The sample tables could not be loaded." badge="On-demand preview" /><p className="error-text" role="alert">{reviewError}</p><button className="button secondary" onClick={openReview}>Try loading again</button></> : <RunReview bootstrap={bootstrap} proposal={proposal} sources={sources} run={run} onRun={startRun} />;
-  else content = [null,
+  else content = transition ? <SetupLoading next={transition} /> : [null,
     <Access bootstrap={bootstrap} next={() => advance(2)} />,
     <Analysis bootstrap={bootstrap} analysis={analysis} onScan={async () => setAnalysis(await post('/api/analyze-codebase'))} next={() => advance(3)} />,
     analysis && <Tables analysis={analysis} next={() => advance(4)} />,
     <QuestionStep questions={bootstrap?.questions || []} next={() => advance(5)} />,
-    <Approval bootstrap={bootstrap} onApprove={async () => { const value = await post('/api/proposal', { version: bootstrap.ruleVersion, approved: true, questionIds: bootstrap.questions.map(question => question.id) }); setProposal(value); advance(6); }} />,
+    <Approval bootstrap={bootstrap} onApprove={async () => { const value = await post('/api/proposal', { version: bootstrap.ruleVersion, approved: true, questionIds: bootstrap.questions.map(question => question.id) }); setProposal(value); await advance(6); }} />,
     proposal && <Proposal proposal={proposal} next={() => advance(7)} />,
     <Done openReview={openReview} />,
   ][step];
-  return <><header className="dash-global"><a className="brand" href="/"><img src="/brand/icon-mark-transparent.png" alt="" /><span>AuditMind</span></a><div className="dash-global-right"><span>Guided product demo</span><span className="guest-pill">Guest</span></div></header>{loadError ? <main className="login-root"><p className="error-text" role="alert">Could not load the demo: {loadError}. Refresh to try again.</p></main> : !bootstrap ? <main className="login-root"><div className="loading-sheet" role="status"><Busy>Opening workspace</Busy></div></main> : !guest ? <Login onGuest={() => { sessionStorage.setItem('auditmind-guest', '1'); setGuest(true); }} /> : <div className="dashboard-shell"><aside className="dashboard-sidebar"><div className="sidebar-project"><span>Sample project</span><strong>Wallet ledger</strong><small>Fictional repository and data</small></div><nav aria-label="Demo sections"><p>Setup</p>{steps.map((label, index) => <button type="button" key={label} className={`side-step ${view === 'setup' && step === index + 1 ? 'active' : ''} ${index + 1 < maxStep ? 'complete' : ''}`} disabled={index + 1 > maxStep} onClick={() => { setView('setup'); setStep(index + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}><span>{String(index + 1).padStart(2, '0')}</span>{label}</button>)}<p className="sidebar-separator">After setup</p><button type="button" className={`review-nav ${view === 'review' ? 'active' : ''}`} disabled={maxStep < 7} onClick={openReview}>Run Review <span>↗</span></button></nav><div className="sidebar-bottom">Guest workspace<br />Local guided demo</div></aside><div className="dashboard-content"><div className="dashboard-toolbar"><span>{view === 'review' ? 'Run Review / Sample run' : `Setup / ${steps[step - 1]}`}</span><span className="toolbar-tag">Sample environment</span></div><main id="screen" key={`${view}-${step}`} className="work-enter">{content}</main></div></div>}</>;
+  return <><header className="dash-global"><a className="brand" href="/"><img src="/brand/icon-mark-transparent.png" alt="" /><span>AuditMind</span></a><div className="dash-global-right"><span>Guided product demo</span><span className="guest-pill">Guest</span></div></header>{loadError ? <main className="login-root"><p className="error-text" role="alert">Could not load the demo: {loadError}. Refresh to try again.</p></main> : !bootstrap ? <main className="login-root"><div className="loading-sheet" role="status"><Busy>Opening workspace</Busy></div></main> : !guest ? <Login onGuest={() => { sessionStorage.setItem('auditmind-guest', '1'); setGuest(true); }} /> : <div className="dashboard-shell"><aside className="dashboard-sidebar"><div className="sidebar-project"><span>Sample project</span><strong>Wallet ledger</strong><small>Fictional repository and data</small></div><nav aria-label="Demo sections"><p>Setup</p>{steps.map((label, index) => <button type="button" key={label} className={`side-step ${view === 'setup' && step === index + 1 ? 'active' : ''} ${index + 1 < maxStep ? 'complete' : ''}`} disabled={index + 1 > maxStep || Boolean(transition)} onClick={() => { setView('setup'); setStep(index + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}><span>{String(index + 1).padStart(2, '0')}</span>{label}</button>)}<p className="sidebar-separator">After setup</p><button type="button" className={`review-nav ${view === 'review' ? 'active' : ''}`} disabled={maxStep < 7 || Boolean(transition)} onClick={openReview}>Run Review <span>↗</span></button></nav><div className="sidebar-bottom">Guest workspace<br />Local guided demo</div></aside><div className="dashboard-content"><div className="dashboard-toolbar"><span>{view === 'review' ? 'Run Review / Sample run' : `Setup / ${steps[transition ? transition - 1 : step - 1]}`}</span><span className="toolbar-tag">Sample environment</span></div><main id="screen" key={`${view}-${step}-${transition || ''}`} className="work-enter">{content}</main></div></div>}</>;
 }
 
 createRoot(document.getElementById('root')).render(<App />);

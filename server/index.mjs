@@ -9,9 +9,10 @@ import { provePair } from './proof.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const publicDir = join(root, 'public');
-const proposalDir = join(root, 'proposals');
-const runDir = join(root, 'runs');
-const analysisFile = join(root, `codebase-analysis-${ruleVersion}.json`);
+const dataDir = resolve(process.env.DATA_DIR || root);
+const proposalDir = join(dataDir, 'proposals');
+const runDir = join(dataDir, 'runs');
+const analysisFile = join(dataDir, `codebase-analysis-${ruleVersion}.json`);
 const proposalJson = join(proposalDir, `mock-${ruleVersion}.json`);
 const proposalCode = join(proposalDir, `mock-${ruleVersion}.mjs`);
 await Promise.all([mkdir(proposalDir, { recursive: true }), mkdir(runDir, { recursive: true })]);
@@ -75,6 +76,9 @@ async function executeRun(run) {
 const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
+    if (request.method === 'GET' && url.pathname === '/health') {
+      return json(response, 200, { status: 'ok' });
+    }
     if (request.method === 'GET' && url.pathname === '/api/bootstrap') {
       return json(response, 200, { rule: ruleTemplate, ruleVersion, windowId, circuitSource, sampleRepository: 'sample/wallet-ledger', questions: matchQuestions });
     }
@@ -131,4 +135,6 @@ const server = http.createServer(async (request, response) => {
     json(response, error.code === 'ENOENT' ? 404 : 500, { error: error.code === 'ENOENT' ? 'Not found' : error.message });
   }
 });
-server.listen(Number(process.env.PORT || 4173), '127.0.0.1', () => console.log(`AuditMind listening at http://127.0.0.1:${process.env.PORT || 4173}`));
+const port = Number(process.env.PORT || 4173);
+const host = process.env.HOST || '0.0.0.0';
+server.listen(port, host, () => console.log(`AuditMind listening on ${host}:${port}`));

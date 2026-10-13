@@ -529,6 +529,11 @@ button:disabled { opacity: .58; cursor: not-allowed; }
 .button:disabled .button-spinner { opacity: 1; }
 .action-error { margin: 15px 0 0; }
 .loading-sheet { min-height: 180px; display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--body); font-weight: 600; }
+.setup-loading { min-height: 340px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: var(--surface); border: 1px solid var(--line-strong); padding: 32px; }
+.setup-loading-count { color: var(--blue); font: 600 12px 'IBM Plex Mono', monospace; }
+.setup-loading-spinner { width: 34px; height: 34px; margin: 24px 0 16px; border: 3px solid #c9dbf2; border-top-color: var(--blue); border-radius: 50%; animation: spin .75s linear infinite; }
+.setup-loading h1 { margin: 0; font: 600 clamp(22px, 3vw, 29px) 'Chivo', 'IBM Plex Sans', sans-serif; letter-spacing: -.035em; }
+.setup-loading p { margin: 9px 0 0; color: var(--muted); font-size: 13px; }
 .file-list > div { grid-template-columns: 50px minmax(0, 1fr) 190px 22px; }
 .file-list .file-done { color: var(--green); font-size: 17px; font-weight: 700; }
 .file-list.is-scanning > div { color: var(--muted); }
@@ -571,7 +576,7 @@ button:disabled { opacity: .58; cursor: not-allowed; }
   .run-activity li { padding: 7px 0 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .work-enter, .button-spinner, .activity-track span, .live-pulse { animation: none; }
+  .work-enter, .button-spinner, .setup-loading-spinner, .activity-track span, .live-pulse { animation: none; }
 }
 
 /* The proof story separates business results from data commitments. */
