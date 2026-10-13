@@ -1,22 +1,21 @@
 export function generateCheckCode(rule) {
-  if (rule.id !== 'deposit-credit-ledger-v1') throw new Error('Unsupported rule template');
+  if (rule.id !== 'coin-deposit-transaction-v1') throw new Error('Unsupported rule template');
   return `// Generated from AuditMind rule ${rule.id}.
-// This is the exact code used by the preview worker and proposed for GitHub.
-export function reconcile({ deposits, credits, ledger }, rule) {
+// The preview worker executes this exact proposed file.
+export function reconcile({ coinDeposit, transactions }, rule) {
   const findings = [];
-  for (const deposit of deposits) {
-    const matchingCredits = credits.filter(row => row.reference === deposit.reference);
-    const matchingLedger = ledger.filter(row => row.reference === deposit.reference);
-    if (matchingCredits.length !== 1 || matchingLedger.length !== 1) {
-      findings.push({ reference: deposit.reference, kind: 'cardinality', detail: 'Expected one credit and one ledger entry.' });
+  for (const deposit of coinDeposit) {
+    const related = transactions.filter(row => row.depositId === deposit.depositId && row.direction === 'credit');
+    if (related.length !== 1) {
+      findings.push({ reference: deposit.depositId, kind: 'cardinality', source: 'transactions', expected: 'one credit', actual: String(related.length) });
       continue;
     }
-    for (const [source, row] of [['Customer credit', matchingCredits[0]], ['Account ledger', matchingLedger[0]]]) {
-      if (row.asset !== deposit.asset) findings.push({ reference: deposit.reference, kind: 'asset', source, expected: deposit.asset, actual: row.asset });
-      if (row.amountCents !== deposit.amountCents) findings.push({ reference: deposit.reference, kind: 'amount', source, expected: deposit.amountCents, actual: row.amountCents });
-    }
+    const credit = related[0];
+    if (credit.accountId !== deposit.accountId) findings.push({ reference: deposit.depositId, kind: 'account', source: 'transactions', expected: deposit.accountId, actual: credit.accountId });
+    if (credit.asset !== deposit.asset) findings.push({ reference: deposit.depositId, kind: 'asset', source: 'transactions', expected: deposit.asset, actual: credit.asset });
+    if (credit.amountCents !== deposit.amountCents) findings.push({ reference: deposit.depositId, kind: 'amount', source: 'transactions', expected: (deposit.amountCents / 100).toFixed(2) + ' ' + deposit.asset, actual: (credit.amountCents / 100).toFixed(2) + ' ' + credit.asset });
   }
-  return { ruleId: rule.id, checked: deposits.length, passed: findings.length === 0, findings };
+  return { ruleId: rule.id, checked: coinDeposit.length, passed: findings.length === 0, findings };
 }
 `;
 }

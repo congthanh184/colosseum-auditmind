@@ -4,14 +4,14 @@ import { randomUUID } from 'node:crypto';
 import { extname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { sources, ruleTemplate, ruleVersion, windowId, digest, generatedCode, analyzeSources } from './data.mjs';
-import { proveTriple } from './proof.mjs';
+import { provePair } from './proof.mjs';
 import { createPullRequest, githubConfigured } from './github.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const publicDir = join(root, 'public');
 const proposalDir = join(root, 'proposals');
 const runDir = join(root, 'runs');
-const analysisFile = join(root, 'analysis.json');
+const analysisFile = join(root, `analysis-${ruleVersion}.json`);
 await Promise.all([mkdir(proposalDir, { recursive: true }), mkdir(runDir, { recursive: true })]);
 const runs = new Map();
 const type = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml' };
@@ -49,16 +49,17 @@ async function update(run, stage, message) {
 
 async function executeRun(run) {
   try {
-    await update(run, 'snapshot', 'Loaded one identified row from each synthetic source.');
+    await update(run, 'snapshot', 'Loaded 20 coin deposits and 20 credit transactions.');
     const { reconcile } = await import(pathToFileURL(join(proposalDir, `${run.version}.mjs`)).href);
     const result = reconcile(sources, ruleTemplate);
     run.result = result;
-    await update(run, 'reconcile', `${result.checked} deposit checked; ${result.findings.length} exception found.`);
-    await update(run, 'proving', 'Generating Groth16 proof for the identified transaction triple.');
-    const zk = await proveTriple(run.version);
-    if (zk.mismatch !== Number(!result.passed)) throw new Error('Circuit result disagrees with rule code');
+    await update(run, 'reconcile', `${result.checked} deposits checked; ${result.findings.length} exception found.`);
+    if (result.findings.length !== 1) throw new Error('This proof preview expects one flagged pair');
+    await update(run, 'proving', 'Generating Groth16 proof for the flagged deposit and transaction.');
+    const zk = await provePair(run.version, result.findings[0].reference);
+    if (zk.mismatch !== 1) throw new Error('Circuit result disagrees with rule code');
     run.zk = zk;
-    await update(run, 'verified', 'Groth16 proof verified; source row hashes and public outcome match the snapshot.');
+    await update(run, 'verified', 'Groth16 proof verified; flagged row hashes and outcome match the snapshot.');
     const proofDigest = digest(zk.proof);
     run.commitment = digest({ version: run.version, windowId, publicSignals: zk.publicSignals, proofDigest, result: result.passed ? 'pass' : 'fail' });
     run.proofDigest = proofDigest;
@@ -73,7 +74,7 @@ const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
     if (request.method === 'GET' && url.pathname === '/api/bootstrap') {
-      return json(response, 200, { sources, rule: ruleTemplate, ruleVersion, windowId, proposal: await proposal(), analysis: await analysis(), githubConfigured: githubConfigured(), githubAccessUrl: process.env.GITHUB_APP_INSTALL_URL || null });
+      return json(response, 200, { sources, rule: ruleTemplate, ruleVersion, windowId, proposal: await proposal(), analysis: await analysis(), githubConfigured: githubConfigured(), githubRepository: process.env.GITHUB_REPOSITORY || null, githubAccessUrl: process.env.GITHUB_APP_INSTALL_URL || null });
     }
     if (request.method === 'POST' && url.pathname === '/api/analyze') {
       const result = analyzeSources();

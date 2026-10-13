@@ -4,6 +4,7 @@ node_modules/
 runs/
 proposals/
 analysis.json
+analysis-*.json
 artifacts/pot*.ptau
 artifacts/*_0000.zkey
 artifacts/*.r1cs

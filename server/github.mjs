@@ -57,7 +57,7 @@ export async function createPullRequest(proposal) {
   try {
     pull = await api(`/repos/${repo}/pulls`, {
       method: 'POST',
-      body: JSON.stringify({ title: 'Add daily deposit reconciliation rule', head: branch, base, body: `Proposed AuditMind rule version: \`${proposal.version}\`.\n\nChecks a deposit, customer credit and ledger entry for a shared reference, asset and amount. The sample sources are synthetic. Preview this rule version in AuditMind before merging.` })
+      body: JSON.stringify({ title: 'Add daily deposit reconciliation rule', head: branch, base, body: `Proposed AuditMind rule version: \`${proposal.version}\`.\n\nChecks coinDeposit rows against credit rows in transactions for matching deposit ID, account, asset and amount. The sample sources are synthetic. Preview this rule version in AuditMind before merging.` })
     });
   } catch (error) {
     if (!String(error.message).includes('422')) throw error;

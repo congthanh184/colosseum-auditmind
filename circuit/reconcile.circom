@@ -1,77 +1,58 @@
 pragma circom 2.0.0;
-
 include "circomlib/circuits/poseidon.circom";
 include "circomlib/circuits/comparators.circom";
 
-// Demonstration circuit for one identified deposit/credit/ledger triple.
-// It does not prove that a source contained every transaction.
-template ReconcileTriple() {
+// Proves the comparison for one identified deposit and credit transaction.
+// It does not prove all rows were supplied or checked.
+template ReconcilePair() {
     signal input ruleVersion;
     signal input windowId;
     signal input depositRef;
+    signal input depositAccount;
     signal input depositAsset;
     signal input depositAmount;
-    signal input creditRef;
-    signal input creditAsset;
-    signal input creditAmount;
-    signal input ledgerRef;
-    signal input ledgerAsset;
-    signal input ledgerAmount;
+    signal input transactionRef;
+    signal input transactionAccount;
+    signal input transactionAsset;
+    signal input transactionAmount;
 
     signal output depositCommitment;
-    signal output creditCommitment;
-    signal output ledgerCommitment;
+    signal output transactionCommitment;
     signal output mismatch;
 
-    component depositHash = Poseidon(5);
-    component creditHash = Poseidon(5);
-    component ledgerHash = Poseidon(5);
+    component depositHash = Poseidon(6);
+    component transactionHash = Poseidon(6);
     depositHash.inputs[0] <== ruleVersion;
     depositHash.inputs[1] <== windowId;
     depositHash.inputs[2] <== depositRef;
-    depositHash.inputs[3] <== depositAsset;
-    depositHash.inputs[4] <== depositAmount;
-    creditHash.inputs[0] <== ruleVersion;
-    creditHash.inputs[1] <== windowId;
-    creditHash.inputs[2] <== creditRef;
-    creditHash.inputs[3] <== creditAsset;
-    creditHash.inputs[4] <== creditAmount;
-    ledgerHash.inputs[0] <== ruleVersion;
-    ledgerHash.inputs[1] <== windowId;
-    ledgerHash.inputs[2] <== ledgerRef;
-    ledgerHash.inputs[3] <== ledgerAsset;
-    ledgerHash.inputs[4] <== ledgerAmount;
+    depositHash.inputs[3] <== depositAccount;
+    depositHash.inputs[4] <== depositAsset;
+    depositHash.inputs[5] <== depositAmount;
+    transactionHash.inputs[0] <== ruleVersion;
+    transactionHash.inputs[1] <== windowId;
+    transactionHash.inputs[2] <== transactionRef;
+    transactionHash.inputs[3] <== transactionAccount;
+    transactionHash.inputs[4] <== transactionAsset;
+    transactionHash.inputs[5] <== transactionAmount;
     depositCommitment <== depositHash.out;
-    creditCommitment <== creditHash.out;
-    ledgerCommitment <== ledgerHash.out;
+    transactionCommitment <== transactionHash.out;
 
-    component refCredit = IsEqual();
-    component refLedger = IsEqual();
-    component assetCredit = IsEqual();
-    component assetLedger = IsEqual();
-    component amountCredit = IsEqual();
-    component amountLedger = IsEqual();
+    component refEqual = IsEqual();
+    component accountEqual = IsEqual();
+    component assetEqual = IsEqual();
+    component amountEqual = IsEqual();
     signal matchA;
     signal matchB;
-    signal matchC;
-    signal matchD;
-    refCredit.in[0] <== depositRef;
-    refCredit.in[1] <== creditRef;
-    refLedger.in[0] <== depositRef;
-    refLedger.in[1] <== ledgerRef;
-    assetCredit.in[0] <== depositAsset;
-    assetCredit.in[1] <== creditAsset;
-    assetLedger.in[0] <== depositAsset;
-    assetLedger.in[1] <== ledgerAsset;
-    amountCredit.in[0] <== depositAmount;
-    amountCredit.in[1] <== creditAmount;
-    amountLedger.in[0] <== depositAmount;
-    amountLedger.in[1] <== ledgerAmount;
-    matchA <== refCredit.out * refLedger.out;
-    matchB <== assetCredit.out * assetLedger.out;
-    matchC <== amountCredit.out * amountLedger.out;
-    matchD <== matchA * matchB;
-    mismatch <== 1 - matchD * matchC;
+    refEqual.in[0] <== depositRef;
+    refEqual.in[1] <== transactionRef;
+    accountEqual.in[0] <== depositAccount;
+    accountEqual.in[1] <== transactionAccount;
+    assetEqual.in[0] <== depositAsset;
+    assetEqual.in[1] <== transactionAsset;
+    amountEqual.in[0] <== depositAmount;
+    amountEqual.in[1] <== transactionAmount;
+    matchA <== refEqual.out * accountEqual.out;
+    matchB <== assetEqual.out * amountEqual.out;
+    mismatch <== 1 - matchA * matchB;
 }
-
-component main {public [ruleVersion, windowId]} = ReconcileTriple();
+component main {public [ruleVersion, windowId]} = ReconcilePair();
