@@ -1,0 +1,18 @@
+{
+  "name": "auditmind-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.mjs",
+    "dev": "node --watch server/index.mjs",
+    "proof:setup": "node scripts/setup-proof.mjs",
+    "test": "node --test --test-force-exit"
+  },
+  "dependencies": {
+    "circomlib": "2.0.5",
+    "circomlibjs": "0.1.7",
+    "snarkjs": "0.7.6"
+  },
+  "engines": { "node": ">=20" }
+}
