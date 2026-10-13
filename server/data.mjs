@@ -25,8 +25,8 @@ export function canonical(value) {
 }
 export function digest(value) { return createHash('sha256').update(typeof value === 'string' ? value : canonical(value)).digest('hex'); }
 export const generatedCode = generateCheckCode(ruleTemplate);
-const circuit = readFileSync(join(resolve(import.meta.dirname, '..'), 'circuit/reconcile.circom'), 'utf8');
-export const ruleVersion = digest({ rule: ruleTemplate, generatedCode, circuitDigest: digest(circuit) });
+export const circuitSource = readFileSync(join(resolve(import.meta.dirname, '..'), 'circuit/reconcile.circom'), 'utf8');
+export const ruleVersion = digest({ rule: ruleTemplate, generatedCode, circuitDigest: digest(circuitSource) });
 export const windowId = 20261013;
 export function analyzeSources() {
   const tables = Object.entries(sources).map(([name, rows]) => ({ name, rowCount: rows.length, fields: Object.keys(rows[0] || {}).filter(field => !field.endsWith('Code')), sampleReference: rows[0]?.depositId }));

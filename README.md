@@ -20,6 +20,8 @@ No GitHub account is accessed, no branch is pushed, and no live pull request is 
 
 Run Review is available after setup ends. It shows 20 fictional rows in each table, including the main `DEP-1050` mismatch: **50 USDT deposited, 50 ETH credited**. It executes the exact versioned generated JavaScript check, answers the three approved questions, and shows how Poseidon hashes are produced for the flagged pair. The worker also generates and verifies a real Groth16 proof for that pair. The JavaScript check covers all 20 deposits; the ZK proof covers **one identified pair**.
 
+The generated JavaScript check identifies the asset error across the sample rows. The Circom circuit constrains field comparisons for the selected pair and exposes a combined `mismatch` bit. A valid proof certifies that this bit and the two Poseidon row commitments were computed from the circuit's witness. It does not mean the business rule passed. The two row hash strings are commitments to row values, not a discrepancy detector or full-table Merkle roots. The pitch deck's orphan counts, reserve check, and table roots describe a proposed batch circuit; this MVP does not produce them.
+
 Merging a real future PR would be the gate for daily scheduled runs. This prototype runs on demand and does not post to Solana.
 
 ## Run locally

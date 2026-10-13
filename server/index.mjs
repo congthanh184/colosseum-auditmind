@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { extname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { sources, ruleTemplate, ruleVersion, windowId, digest, generatedCode } from './data.mjs';
+import { sources, ruleTemplate, ruleVersion, windowId, digest, generatedCode, circuitSource } from './data.mjs';
 import { analyzeCodebase, matchQuestions } from './codebase.mjs';
 import { provePair } from './proof.mjs';
 
@@ -76,7 +76,7 @@ const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
     if (request.method === 'GET' && url.pathname === '/api/bootstrap') {
-      return json(response, 200, { rule: ruleTemplate, ruleVersion, windowId, sampleRepository: 'sample/wallet-ledger', questions: matchQuestions });
+      return json(response, 200, { rule: ruleTemplate, ruleVersion, windowId, circuitSource, sampleRepository: 'sample/wallet-ledger', questions: matchQuestions });
     }
     if (request.method === 'POST' && url.pathname === '/api/analyze-codebase') {
       const result = await analyzeCodebase();

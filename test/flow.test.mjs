@@ -37,11 +37,15 @@ test('generated code checks all deposits and finds the one asset mismatch', asyn
   assert.equal(module.reconcile(withPending, ruleTemplate).checked, 20);
 });
 
-test('pair proof verifies mismatch and rejects a changed public outcome', async () => {
+test('pair circuit proves both a mismatch and a match, and rejects a changed public outcome', async () => {
   const result = await provePair(ruleVersion, 'DEP-1050');
   assert.equal(result.verified, true);
   assert.equal(result.mismatch, 1);
-  assert.notEqual(result.commitments.deposit, result.commitments.transaction);
+  assert.equal(result.publicSignals[0], result.commitments.deposit);
+  assert.equal(result.publicSignals[1], result.commitments.transaction);
+  const matched = await provePair(ruleVersion, 'DEP-1041');
+  assert.equal(matched.verified, true);
+  assert.equal(matched.mismatch, 0);
   const root = resolve(import.meta.dirname, '..');
   const key = JSON.parse(await readFile(join(root, 'artifacts/verification_key.json'), 'utf8'));
   const changed = [...result.publicSignals];

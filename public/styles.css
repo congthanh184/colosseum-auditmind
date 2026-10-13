@@ -573,3 +573,29 @@ button:disabled { opacity: .58; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   .work-enter, .button-spinner, .activity-track span, .live-pulse { animation: none; }
 }
+
+/* The proof story separates business results from data commitments. */
+.proof-path { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 11px; margin-bottom: 23px; color: var(--body); font-size: 12px; font-weight: 600; }
+.proof-path span { padding: 7px 9px; background: #edf3fb; }
+.proof-path i { color: var(--blue); font-style: normal; }
+.proof-roles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px; }
+.proof-roles > div { border-top: 2px solid var(--blue); padding-top: 16px; min-width: 0; }
+.proof-roles .role-label { display: block; color: var(--body); font-size: 12px; margin-bottom: 8px; }
+.proof-roles strong { display: block; font: 600 20px 'Chivo', sans-serif; }
+.proof-roles p, .proof-verdict p, .proof-scope-note { color: var(--body); font-size: 13px; line-height: 1.6; }
+.proof-roles p { margin: 9px 0 14px; }
+.proof-roles details { margin-top: 14px; }
+.proof-roles summary { color: var(--blue); cursor: pointer; font-size: 12px; font-weight: 700; }
+.proof-roles pre { max-height: 310px; overflow: auto; padding: 14px; background: #f3f7fc; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; line-height: 1.55; }
+.proof-roles .circuit-line { display: block; padding: 11px 12px; background: #f3f7fc; color: var(--blue); font-size: 11px; overflow-wrap: anywhere; }
+.proof-verdict { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 24px; padding: 18px 20px; margin-top: 25px; background: #edf6f1; }
+.proof-verdict span { display: block; color: #315a4b; font-size: 12px; margin-bottom: 4px; }
+.proof-verdict strong { color: #235d49; }
+.proof-verdict p { margin: 0; color: #315a4b; }
+.proof-scope-note { border-top: 1px solid var(--line); padding-top: 15px; margin: 24px 0 0; }
+.hash-caution { padding: 15px 17px; background: #fff6ed; color: #664c2c; font-size: 13px; line-height: 1.55; margin: 18px 0 0; }
+.hash-caution strong { color: #5e3b18; }
+@media (max-width: 740px) {
+  .proof-roles, .proof-verdict { grid-template-columns: 1fr; }
+  .proof-verdict { gap: 9px; }
+}
